@@ -11,7 +11,7 @@ class Hello(Resource):
         return {"hello": "restx"}
     
 @ns.route('/courses')
-class CourseAPI(Resource):
+class CourseListAPI(Resource):
     @ns.marshal_list_with(course_model)
     def get(self):
         return Course.query.all()
@@ -24,9 +24,17 @@ class CourseAPI(Resource):
         db.session.commit()
         return course, 201
         
+
+@ns.route('/courses/<int:id>')
+class CourseAPI(Resource):
+    @ns.marshal_with(course_model)
+    def get(self, id):
+        course = Course.query.get(id)
+        return course
+  
     
 @ns.route('/students')
-class StudentApi(Resource):
+class StudentListApi(Resource):
       @ns.marshal_list_with(student_model)
       def get(self):
           return Student.query.all() 
@@ -38,3 +46,28 @@ class StudentApi(Resource):
           db.session.add(student)
           db.session.commit()
           return student, 201     
+
+
+@ns.route('/students/<int:id>')
+class StudentAPI(Resource):
+    @ns.marshal_with(student_model)
+    def get(self, id):
+        student = Student.query.get(id)
+        return student 
+    
+    @ns.expect(student_input_model)
+    @ns.marshal_with(student_model)
+    def put(self,id):
+        student = Student.query.get(id)
+        student.name = ns.payload['name']
+        student.course_id = ns.payload['course_id'] 
+        db.session.commit()
+        return student 
+    
+    def delete(self, id):
+          student = Student.query.get(id)
+          db.session.delete(student)
+          db.session.commit()
+          return {}, 204
+
+    
